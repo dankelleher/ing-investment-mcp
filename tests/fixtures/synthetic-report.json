@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "source": "synthetic fixture",
+  "completed_at": "2026-10-13T00:00:00+00:00",
+  "milestone_0_passed": false,
+  "accounts": [
+    {
+      "id": "7a12a141da0d0eb70265986c",
+      "kind": "depot",
+      "masked_iban": "****0000",
+      "currency": "EUR",
+      "supported_operations": [
+        "GET_HOLDINGS"
+      ],
+      "holding_count": 1,
+      "valid_valued_holding_count": 1,
+      "transaction_count": 0,
+      "balance_read": false,
+      "holding_fields": {
+        "isin": 1,
+        "quantity_decimal": 1,
+        "price_decimal": 1,
+        "market_value_decimal": 1,
+        "acquisition_price_decimal": 0,
+        "currency": 1,
+        "valuation_date": 1
+      }
+    },
+    {
+      "id": "23215138437b48f6ebeb3b7d",
+      "kind": "checking",
+      "masked_iban": "****0001",
+      "currency": "EUR",
+      "supported_operations": [
+        "GET_BALANCE",
+        "GET_TRANSACTIONS"
+      ],
+      "holding_count": 0,
+      "valid_valued_holding_count": 0,
+      "transaction_count": 1,
+      "balance_read": true,
+      "holding_fields": {}
+    },
+    {
+      "id": "5fad6bfa400542a60ff8c24f",
+      "kind": "savings",
+      "masked_iban": "****0002",
+      "currency": "EUR",
+      "supported_operations": [
+        "GET_BALANCE"
+      ],
+      "holding_count": 0,
+      "valid_valued_holding_count": 0,
+      "transaction_count": 0,
+      "balance_read": true,
+      "holding_fields": {}
+    }
+  ],
+  "transaction_window": {
+    "from": "2026-07-16",
+    "to": "2026-10-13"
+  },
+  "warnings": [
+    "Live compatibility is unverified until the live probe passes.",
+    "No financial values, account names, transaction text or credentials are included.",
+    "No retries are performed. Authentication challenges require human action.",
+    "Cost basis is not inferred from acquisition price.",
+    "Historical Girokonto transactions may be limited to 90 days."
+  ],
+  "next_step": "Full build blocked: resolve missing accounts/fields/reads; use ING CSV export if holdings fail."
+}

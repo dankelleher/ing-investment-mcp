@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ing-investment-mcp"
+version = "0.1.0"
+description = "ING read-only FinTS feasibility gate for an investment MCP"
+requires-python = ">=3.12"
+dependencies = ["fints==5.0.1", "keyring==25.6.0"]
+
+[project.scripts]
+ing-investment = "ing_investment.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["ing_investment*"]
