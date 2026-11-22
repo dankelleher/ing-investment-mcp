@@ -12,7 +12,7 @@ import time
 from uuid import UUID
 import xml.etree.ElementTree as ET
 
-from .models import decimal
+from .decimals import decimal
 
 MAX_EXPORT = 10 * 1024 * 1024
 ING_BANK_CODE = '50010517'
@@ -50,7 +50,7 @@ def ing_identity(raw):
 
 
 def is_ing_account(raw, selected_depots=frozenset()):
-    from .moneymoney_selection import eligible_unidentified_depot
+    from .selection import eligible_unidentified_depot
     if raw.get('group'):
         return False
     if ing_identity(raw) is not None:

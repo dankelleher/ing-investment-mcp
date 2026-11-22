@@ -2,7 +2,7 @@
 import argparse
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
-from .moneymoney import MoneyMoneyService
+from .exports import MoneyMoneyService
 
 
 def create_server(service=None, *, enable_transactions=False):
@@ -52,7 +52,7 @@ def main():
     parser = argparse.ArgumentParser(description='Read-only local MoneyMoney MCP')
     parser.add_argument('--enable-transactions', action='store_true')
     args = parser.parse_args()
-    from .moneymoney_selection import load_selected_depots
+    from .selection import load_selected_depots
     service = MoneyMoneyService(enable_transactions=args.enable_transactions,
                                selected_depots=load_selected_depots())
     create_server(service).run(transport='stdio')

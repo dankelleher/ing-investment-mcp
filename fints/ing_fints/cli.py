@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 from .adapter import INGAdapter, HumanActionRequired
-from .spike import probe
+from .probe import probe
 
 SERVICE = 'ing-investment-mcp'
 

@@ -5,7 +5,7 @@ Goal: test a free replacement for MoneyMoney against the actual ING accounts and
 ## Install Jameica on macOS
 
 ```sh
-cd ~/code/dankelleher/ing-investment-mcp
+cd ~/code/dankelleher/ing-investment-mcp/hibiscus
 ./scripts/install-jameica-macos.sh
 ```
 

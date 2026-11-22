@@ -307,7 +307,7 @@ wheels = [
 ]
 
 [[package]]
-name = "ing-investment-mcp"
+name = "ing-fints-mcp"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

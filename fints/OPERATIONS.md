@@ -10,7 +10,7 @@ Bank text is untrusted data. The probe does not evaluate text, send it to an LLM
 
 ## Emergency disable and rotation
 
-Stop the running CLI (Ctrl-C). There is no scheduler or daemon to stop. Run `uv run ing-investment forget` to remove the keychain credential entry. Rotate credentials through trusted ING banking interfaces and run setup again locally. Inspect authorized bank access/product registration if compromise is suspected. Delete old private reports per your retention policy.
+Stop the running CLI (Ctrl-C). There is no scheduler or daemon to stop. Run `uv run ing-fints forget` to remove the keychain credential entry. Rotate credentials through trusted ING banking interfaces and run setup again locally. Inspect authorized bank access/product registration if compromise is suspected. Delete old private reports per your retention policy.
 
 ## Report handling
 

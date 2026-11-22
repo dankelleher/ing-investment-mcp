@@ -5,11 +5,11 @@ from unittest import TestCase, main
 from unittest.mock import patch
 import json
 import sys
-from ing_investment.models import decimal, holding_record, InvalidRecord
-from ing_investment.adapter import INGAdapter, ALLOWED, HumanActionRequired
-from ing_investment.spike import probe
-from ing_investment.mt535 import DecimalMT535Parser
-from ing_investment.cli import main as cli_main, secure_keyring
+from ing_fints.models import decimal, holding_record, InvalidRecord
+from ing_fints.adapter import INGAdapter, ALLOWED, HumanActionRequired
+from ing_fints.probe import probe
+from ing_fints.mt535 import DecimalMT535Parser
+from ing_fints.cli import main as cli_main, secure_keyring
 
 
 class FakeBank:
@@ -113,7 +113,7 @@ class SpikeTests(TestCase):
                 secure_keyring()
 
     def test_transport_destination_tls_and_timeout(self):
-        from ing_investment.adapter import ENDPOINT
+        from ing_fints.adapter import ENDPOINT
         calls = []
         session = NS(trust_env=True)
         def post(url, *args, **kwargs):

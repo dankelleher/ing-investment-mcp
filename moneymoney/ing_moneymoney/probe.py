@@ -3,7 +3,7 @@ import argparse
 import json
 import os
 from pathlib import Path
-from .moneymoney import (MoneyMoneyAdapter, MoneyMoneyService, records,
+from .exports import (MoneyMoneyAdapter, MoneyMoneyService, records,
                          is_ing_account, ing_identity, ExportError)
 
 
@@ -85,7 +85,7 @@ def main():
     parser.add_argument('--capture-portfolio', action='store_true', help='Save private raw portfolio exports locally for debugging')
     args = parser.parse_args()
     try:
-        from .moneymoney_selection import load_selected_depots, select_depots_locally
+        from .selection import load_selected_depots, select_depots_locally
         capture_directory = None
         if args.capture_portfolio:
             capture_directory = Path(__file__).resolve().parents[1] / 'reports'

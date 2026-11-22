@@ -37,7 +37,7 @@ def eligible_unidentified_depot(raw):
 
 
 def select_depots_locally(accounts):
-    from .moneymoney import scrub_text
+    from .exports import scrub_text
     candidates = [a for a in accounts if eligible_unidentified_depot(a)]
     print('MoneyMoney depots with no exported bank identifier (local display only):')
     for index, account in enumerate(candidates, 1):

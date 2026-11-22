@@ -8,7 +8,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from ing_investment.moneymoney import (MoneyMoneyAdapter, MoneyMoneyService, ExportError,
+from ing_moneymoney.exports import (MoneyMoneyAdapter, MoneyMoneyService, ExportError,
                                       parse_plist, page, scrub_text, ing_identity, is_ing_account)
 
 DEPOT = '12345678-1234-1234-1234-123456789012'
@@ -51,7 +51,7 @@ class FakeMM:
 
 class MoneyMoneyTests(unittest.TestCase):
     def test_unidentified_depots_require_explicit_owner_selection(self):
-        from ing_investment.moneymoney_probe import probe_exports
+        from ing_moneymoney.probe import probe_exports
         bank = FakeMM()
         original = bank.accounts
         def accounts():
@@ -78,10 +78,10 @@ class MoneyMoneyTests(unittest.TestCase):
 
     def test_selection_config_contains_only_uuids_and_is_private(self):
         import tempfile
-        from ing_investment.moneymoney_selection import save_selected_depots, load_selected_depots
+        from ing_moneymoney.selection import save_selected_depots, load_selected_depots
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / 'selection.json'
-            with patch('ing_investment.moneymoney_selection.CONFIG', target):
+            with patch('ing_moneymoney.selection.CONFIG', target):
                 save_selected_depots({DEPOT})
                 self.assertEqual(load_selected_depots(), {DEPOT})
                 self.assertEqual(target.stat().st_mode & 0o777, 0o600)
@@ -90,7 +90,7 @@ class MoneyMoneyTests(unittest.TestCase):
                 self.assertEqual(load_selected_depots(), set())
 
     def test_live_export_field_layout_and_separate_currencies(self):
-        from ing_investment.moneymoney import normalize_position, records
+        from ing_moneymoney.exports import normalize_position, records
         raw = {'accountUuid': DEPOT, 'isin': 'IE00B4L5Y983', 'name': 'Synthetic ETF',
                'quantity': Decimal('60.857190000000003'), 'type': 'share',
                'price': Decimal('313.5'), 'currencyOfPrice': 'USD',
@@ -109,7 +109,7 @@ class MoneyMoneyTests(unittest.TestCase):
         self.assertEqual(holding['unit'], 'shares')
 
     def test_ambiguous_portfolio_schema_rejected(self):
-        from ing_investment.moneymoney import records
+        from ing_moneymoney.exports import records
         with self.assertRaises(ExportError):
             records({'portfolio': [], 'securities': []}, 'securities')
 
@@ -130,7 +130,7 @@ class MoneyMoneyTests(unittest.TestCase):
         self.assertIsNone(ing_identity({'iban': 'DE00' + body}))
 
     def test_bic_identified_accounts_work_in_service_and_probe(self):
-        from ing_investment.moneymoney_probe import probe_exports
+        from ing_moneymoney.probe import probe_exports
         bank = FakeMM()
         original = bank.accounts
         def accounts():
@@ -147,7 +147,7 @@ class MoneyMoneyTests(unittest.TestCase):
         self.assertEqual(MoneyMoneyService(bank).accounts()['data']['total_count'], 2)
 
     def test_empty_match_produces_diagnostics_and_does_not_pass(self):
-        from ing_investment.moneymoney_probe import probe_exports
+        from ing_moneymoney.probe import probe_exports
         bank = FakeMM()
         original = bank.accounts
         def accounts():
@@ -167,7 +167,7 @@ class MoneyMoneyTests(unittest.TestCase):
             MoneyMoneyService(bank).accounts()
 
     def test_normalization_failure_keeps_redacted_schema_diagnostics(self):
-        from ing_investment.moneymoney_probe import probe_exports
+        from ing_moneymoney.probe import probe_exports
         bank = FakeMM()
         original = bank.portfolio
         def portfolio(raw_id):
@@ -182,7 +182,7 @@ class MoneyMoneyTests(unittest.TestCase):
         self.assertIn('float', report['portfolios'][0]['numeric_field_types']['quantity'])
 
     def test_probe_exports_each_account_and_portfolio_only_once(self):
-        from ing_investment.moneymoney_probe import probe_exports
+        from ing_moneymoney.probe import probe_exports
         bank = FakeMM()
         with patch.object(bank, 'accounts', wraps=bank.accounts) as accounts, \
              patch.object(bank, 'portfolio', wraps=bank.portfolio) as portfolio:
@@ -191,7 +191,7 @@ class MoneyMoneyTests(unittest.TestCase):
             self.assertEqual(portfolio.call_count, 1)
 
     def test_redacted_local_probe(self):
-        from ing_investment.moneymoney_probe import probe_exports
+        from ing_moneymoney.probe import probe_exports
         report = probe_exports(FakeMM())
         self.assertEqual(report['ing_account_count'], 2)
         self.assertEqual(report['normalized_holding_count'], 3)
@@ -324,7 +324,7 @@ class MoneyMoneyTests(unittest.TestCase):
         self.assertNotIn('Private account', str(caught.exception))
 
     def test_probe_reports_schema_failure_stage(self):
-        from ing_investment.moneymoney_probe import probe_exports
+        from ing_moneymoney.probe import probe_exports
         bank = FakeMM()
         bank.portfolio = lambda raw_id: {'positions': []}
         result = probe_exports(bank)
@@ -353,8 +353,8 @@ class ProtocolTests(unittest.IsolatedAsyncioTestCase):
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
         root = Path(__file__).resolve().parents[1]
-        code = ('import runpy; from ing_investment.moneymoney import MoneyMoneyService; '
-                'from ing_investment.moneymoney_server import create_server; '
+        code = ('import runpy; from ing_moneymoney.exports import MoneyMoneyService; '
+                'from ing_moneymoney.server import create_server; '
                 'FakeMM=runpy.run_path("tests/test_moneymoney.py")["FakeMM"]; '
                 'create_server(MoneyMoneyService(FakeMM())).run(transport="stdio")')
         parameters = StdioServerParameters(command=sys.executable, args=['-c', code], cwd=str(root))
@@ -372,7 +372,7 @@ class ProtocolTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(json.loads(result.content[0].text)['data']['next_cursor'], 1)
 
     async def test_transaction_tools_are_startup_opt_in(self):
-        from ing_investment.moneymoney_server import create_server
+        from ing_moneymoney.server import create_server
         server = create_server(MoneyMoneyService(FakeMM(), enable_transactions=True))
         self.assertIn('search_transactions', {t.name for t in await server.list_tools()})
 
