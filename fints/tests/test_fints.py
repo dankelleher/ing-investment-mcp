@@ -9,19 +9,24 @@ from ing_fints.models import decimal, holding_record, InvalidRecord
 from ing_fints.adapter import INGAdapter, ALLOWED, HumanActionRequired
 from ing_fints.probe import probe
 from ing_fints.mt535 import DecimalMT535Parser
-from ing_fints.cli import main as cli_main, secure_keyring
+from ing_fints.cli import main as cli_main
+from ing_fints.credentials import secure_keyring
+
+
+ACCOUNTS = [NS(iban=None, bic='INGDDEFFXXX', accountnumber='5550001234', subaccount=None, blz='50010517'),
+            NS(iban='DE00000000000000000001', bic='INGDDEFFXXX', accountnumber='0000000001',
+               subaccount=None, blz='50010517'),
+            NS(iban='DE00000000000000000002', bic='INGDDEFFXXX', accountnumber='0000000002',
+               subaccount=None, blz='50010517')]
 
 
 class FakeBank:
-    def accounts(self):
-        return [NS(iban='DE0000000000000000000' + str(i)) for i in range(3)]
-
-    def information(self):
-        return {'accounts': [dict(iban=a.iban, product_name=label, currency='EUR',
-                                 supported_operations={op: True for op in ops})
-                for a, label, ops in zip(self.accounts(),
+    def discover(self):
+        return [(account, dict(iban=account.iban, product_name=label, currency='EUR',
+                               supported_operations={op: True for op in ops}))
+                for account, label, ops in zip(ACCOUNTS,
                     ['Direkt-Depot', 'Girokonto', 'Extra-Konto'],
-                    [('GET_HOLDINGS',), ('GET_BALANCE', 'GET_TRANSACTIONS'), ('GET_BALANCE',)])]}
+                    [('GET_HOLDINGS',), ('GET_BALANCE', 'GET_TRANSACTIONS'), ('GET_BALANCE',)])]
 
     def holdings(self, account):
         return [NS(ISIN='IE00B4L5Y983', pieces=Decimal('1.1234567890123456789'),
@@ -42,6 +47,7 @@ class SpikeTests(TestCase):
         self.assertTrue(report['milestone_0_passed'])
         dumped = json.dumps(report)
         self.assertNotIn('DE000000', dumped)
+        self.assertNotIn('5550001234', dumped)
         self.assertNotIn('secret marker', dumped)
         self.assertNotIn('112.63', dumped)
         self.assertEqual(report['transaction_window']['from'], '2026-07-16')
@@ -56,8 +62,8 @@ class SpikeTests(TestCase):
 
     def test_missing_account_fails_gate(self):
         bank = FakeBank()
-        original = bank.information
-        bank.information = lambda: {'accounts': original()['accounts'][:2]}
+        original = bank.discover
+        bank.discover = lambda: original()[:2]
         self.assertFalse(probe(bank, live=True)['milestone_0_passed'])
 
     def test_missing_values_remain_null(self):
@@ -123,10 +129,12 @@ class SpikeTests(TestCase):
         client = ModuleType('fints.client')
         client.NeedRetryResponse = type('Challenge', (), {})
         client.FinTS3PinTanClient = lambda *a, **kw: NS(connection=NS(session=session))
+        models = ModuleType('fints.models')
+        models.SEPAAccount = NS
         package = ModuleType('fints')
         package.client = client
-        with patch.dict(sys.modules, {'fints': package, 'fints.client': client}):
-            INGAdapter('1234567890', 'fake-pin', 'fake-product')
+        with patch.dict(sys.modules, {'fints': package, 'fints.client': client, 'fints.models': models}):
+            INGAdapter('example.user', 'fake-pin', 'fake-product')
         self.assertFalse(session.trust_env)
         with self.assertRaises(RuntimeError):
             session.post('https://evil.example/', verify=False)

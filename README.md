@@ -6,7 +6,7 @@ Local, read-only MCP servers for ING Deutschland cash accounts and securities de
 |---|---|---|---|
 | [`moneymoney/`](moneymoney/) | MoneyMoney AppleScript exports | MoneyMoney (paid licence) | Working; validated against real exports, including both Smart-Depots |
 | [`hibiscus/`](hibiscus/) | Jameica + Hibiscus + Depot-Viewer | Hibiscus (free) | Installed; blocked at ING login |
-| [`fints/`](fints/) | Direct FinTS with python-fints | This project (registered FinTS product ID) | Feasibility spike; awaiting product registration |
+| [`fints/`](fints/) | Direct FinTS with python-fints | This project (registered FinTS product ID) | MCP server built and tested offline; awaiting product registration |
 
 All three are designed to expose the same read-only tools: accounts, holdings, balances, portfolio summary, sync status and, optionally, booked transactions. None of them offers payments, securities orders, or any bank-login tool. Credentials stay in the banking application or the OS keychain, never in this repository, MCP responses or chat.
 

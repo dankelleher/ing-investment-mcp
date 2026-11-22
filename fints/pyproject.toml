@@ -7,7 +7,11 @@ name = "ing-fints-mcp"
 version = "0.1.0"
 description = "Read-only MCP server for ING Deutschland over direct FinTS"
 requires-python = ">=3.12"
-dependencies = ["fints==5.0.1", "keyring==25.6.0"]
+dependencies = [
+    "fints==5.0.1",
+ "keyring==25.6.0",
+ "mcp>=2.3.0",
+]
 
 [project.scripts]
 ing-fints = "ing_fints.cli:main"

@@ -14,13 +14,9 @@ def supported(metadata):
 def probe(adapter, *, today=None, live=False):
     today = today or date.today()
     start = today - timedelta(days=89)
-    discovered = adapter.accounts()
-    information = adapter.information()
-    metadata_by_iban = {row.get('iban'): row for row in information.get('accounts', [])}
     rows = []
     valid_holdings = balances = transactions = 0
-    for raw in discovered:
-        metadata = metadata_by_iban.get(raw.iban, {})
+    for raw, metadata in adapter.discover():
         account = account_record(raw, metadata)
         operations = supported(metadata)
         row = {'id': account.id, 'kind': account.kind, 'masked_iban': account.masked_iban,

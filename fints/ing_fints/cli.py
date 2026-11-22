@@ -4,19 +4,9 @@ import json
 import os
 import sys
 from pathlib import Path
-from .adapter import INGAdapter, HumanActionRequired
+from .adapter import INGAdapter, HumanActionRequired, valid_user_id
+from .credentials import save_credentials, load_credentials, forget_credentials, MissingCredentials
 from .probe import probe
-
-SERVICE = 'ing-investment-mcp'
-
-
-def secure_keyring():
-    import keyring
-    backend = keyring.get_keyring()
-    # Fail closed: only audited OS-backed stores, no plaintext/fallback backend.
-    if type(backend).__module__ not in ('keyring.backends.macOS', 'keyring.backends.Windows'):
-        raise RuntimeError('An OS-backed macOS/Windows keyring is required')
-    return keyring
 
 
 def main(argv=None):
@@ -32,25 +22,19 @@ def main(argv=None):
     if not sys.stdin.isatty():
         parser.error('Run from a trusted interactive terminal')
     try:
-        keyring = secure_keyring()
         if args.command == 'setup':
-            number = getpass.getpass('ING 10-digit access number (hidden): ')
-            pin = getpass.getpass('ING PIN/password (hidden): ')
-            if len(number) != 10 or not number.isascii() or not number.isdigit() or not pin:
+            user_id = getpass.getpass('ING online-banking username (hidden): ')
+            pin = getpass.getpass('ING online-banking password (hidden): ')
+            if not valid_user_id(user_id) or not pin:
                 raise ValueError('Invalid credentials')
-            keyring.set_password(SERVICE, 'credentials', json.dumps({'number': number, 'pin': pin}))
+            save_credentials(user_id, pin)
             print('Credentials saved in OS keychain.')
             return 0
         if args.command == 'forget':
-            keyring.delete_password(SERVICE, 'credentials')
+            forget_credentials()
             print('Credentials removed.')
             return 0
-        credentials = keyring.get_password(SERVICE, 'credentials')
-        if not credentials:
-            print('Run setup in a trusted local terminal first.', file=sys.stderr)
-            return 2
-        credentials = json.loads(credentials)
-        adapter = INGAdapter(credentials['number'], credentials['pin'], args.product_id)
+        adapter = INGAdapter(*load_credentials(), args.product_id)
         with adapter.connect():
             report = probe(adapter, live=True)
         output = json.dumps(report, indent=2) + '\n'
@@ -61,6 +45,8 @@ def main(argv=None):
                 stream.write(output)
         print(output, end='')
         return 0 if report['milestone_0_passed'] else 3
+    except MissingCredentials as error:
+        print(str(error), file=sys.stderr)
     except HumanActionRequired:
         print('Stopped: authentication challenge. Use trusted local banking setup; no retry performed.', file=sys.stderr)
     except Exception:
